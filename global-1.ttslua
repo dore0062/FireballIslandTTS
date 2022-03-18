@@ -1,0 +1,141 @@
+--[[ Lua code. See documentation= https=//api.tabletopsimulator.com/ --]]
+fireballGUIDS = {
+  "9acd32",
+  "5019bc",
+  "9a6166",
+  "7083a6"
+}
+
+function onLoad()
+  --Set all noninteractable items
+    for _, b in pairs(getAllObjects()) do
+      if b.hasTag("nointeract") then
+        b.interactable = false
+      end
+    end
+    for i, b in ipairs(fireballGUIDS) do
+      local obj = getObjectFromGUID(b)
+      if i == 1 then
+        obj.setPositionSmooth(scarPositions[1])
+        obj.setLock(true)
+        obj.setTags({"fireball","scar"})
+        table.insert(scarFireballs, obj)
+      else
+        obj.setPositionSmooth(cataclysmPositions[i-1])
+        obj.setLock(true)
+        obj.setTags({"fireball","tracker"})
+        table.insert(trackerFireballs, obj)
+    end
+  end
+end
+
+scarFireballs = {}
+trackerFireballs = {}
+
+scarPositions = {
+  {27.91, 1.74, -0.04},
+  {27.92, 1.70, 1.12},
+  {27.93, 1.69, 2.30},
+  {27.93, 1.70, 3.46}
+}
+
+cataclysmPositions = {
+  {38.05, 1.65, -4.92},
+  {37.52, 1.66, -3.85},
+  {38.06, 1.66, -2.78}
+}
+
+unstablePositions = {
+  bridge2={{5.87, 7.56, 4.95}, {7.07, 0.18, 1.98}},
+  bridge1={{4.97, 7.84, -0.90}, {6.49, 45.33, 3.78}},
+  ladder={{-11.07, 4.59, -0.12}, {2.21, 9.95, 352.75}}
+}
+
+function moveToScar()
+  resetFireballs()
+  if #scarFireballs <= 3 then
+    local obj = trackerFireballs[#trackerFireballs]
+    table.remove(trackerFireballs ,#trackerFireballs)
+    table.insert(scarFireballs, obj)
+    obj.setTags({"fireball","scar"})
+    obj.setPositionSmooth(scarPositions[#scarFireballs], false, true)
+  end
+end
+
+function takeFromScar()
+  resetFireballs()
+  if #scarFireballs > 1 then
+    local obj = scarFireballs[#scarFireballs]
+    table.remove(scarFireballs ,#scarFireballs)
+    table.insert(trackerFireballs, obj)
+    obj.setTags({"fireball","tracker"})
+    obj.setPositionSmooth(cataclysmPositions[#trackerFireballs], false, true)
+  end
+end
+
+function resetFireballs()
+  for i, b in ipairs(scarFireballs) do
+    b.setLock(true)
+    b.setPositionSmooth(scarPositions[i], false, true)
+    b.setTags({"fireball","scar"})
+  end
+end
+
+original_positions = {}
+
+function applyDamagePlayer(info)
+  local obj = info.collision_object
+  obj.addTag("hit") -- Just prevents another fireball coming along and causing a chain reaction
+
+  obj.mass = 6
+  obj.drag = 1
+  obj.angular_drag = 1
+  obj.addForce({math.random(1,10),20,math.random(1,10)}, 4)
+  obj.addTorque({0,0,10},4)
+
+  Wait.condition( -- Prevents chain reactions
+    function()
+      Wait.time(function()
+      obj.removeTag("hit")
+      obj.mass = 0.1
+      obj.drag = 10
+      obj.angular_drag = 10
+    end,
+      2
+      )
+    end,
+    || obj.resting
+  )
+end
+
+function applyDamageRegObj(info)
+  local obj = info.collision_object
+  local or_position = unstablePositions[obj.getName()][1]
+  local or_rotation = unstablePositions[obj.getName()][2]
+
+  obj.setLock(false)
+  obj.addForce({math.random(1,10),20,math.random(1,10)}, 4)
+  obj.addTorque({0,0,10},4)
+
+  Wait.condition(
+    function()
+      Wait.time(function()
+      obj.setLock(true)
+      obj.removeTag("hit")
+      obj.setPositionSmooth(or_position, false)
+      obj.setRotationSmooth(or_rotation, false)
+    end,
+      5
+      )
+    end,
+    || obj.resting
+  )
+end
+
+function onObjectCollisionEnter(registered_object, info)
+  if info.collision_object.hasTag("player") and not info.collision_object.hasTag("hit") then
+    applyDamagePlayer(info)
+  elseif info.collision_object.hasTag("unstable") and not info.collision_object.hasTag("hit") then
+    applyDamageRegObj(info)
+  end
+end
