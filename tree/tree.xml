@@ -1,0 +1,5 @@
+<HorizontalLayout height="50" width="50" rotation="0 0 45" position="0 0 -50">
+<button text="L" onClick="left"/>
+<button text="R" onClick="right"/>
+
+</HorizontalLayout>
