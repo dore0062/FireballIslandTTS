@@ -1,0 +1,29 @@
+local rotations = {110.55,207.08,233.96,294.99,323.89} -- Should move this all to global so it can be in the repository
+local index = 1
+
+function rotate(direction)
+
+  if direction == "left" then
+      index = index - 1
+    else
+      index = index + 1
+  end
+
+  if index > #rotations then
+    index = 1
+  end
+
+  if index == 0 then
+    index = #rotations
+  end
+
+  self.setRotationSmooth({0,rotations[index],0}, false, true)
+end
+
+function left()
+  rotate("left")
+end
+
+function right()
+  rotate("right")
+end
