@@ -1,0 +1,72 @@
+local rotations = {0, 79.79, 155.60, 221.36, 287.73}
+local index = 1
+local spawnPoints = {
+  { - 4.68, 10.27, - 2.52}, -- 1
+  { - 2.11, 9.66, - 1.32}, -- 2
+  {1.20, 9.21, - 3.24}, -- 3
+  { - 1.10, 10.20, - 6.69}, -- 4
+  { - 4.42, 9.80, - 5.85} -- 5
+}
+local vectorForce = {
+{-10,3},
+{5,10},
+{10,1},
+{4, -4},
+{-5,-5}
+}
+
+math.randomseed(os.time())
+
+function rotate(direction)
+
+  if direction == "left" then
+    index = index - 1
+  else
+    index = index + 1
+  end
+
+  if index > #rotations then
+    index = 1
+  end
+
+  if index == 0 then
+    index = #rotations
+  end
+
+  self.setRotationSmooth({0, rotations[index], 0}, false, true)
+end
+
+function left()
+  rotate("left")
+end
+
+function right()
+  rotate("right")
+end
+
+fireballs = {"5019bc", "9a6166", "9acd32", "7083a6"}
+
+function fireball()
+  selected = nil
+  for _, b in ipairs(fireballs) do
+    obj = getObjectFromGUID(b)
+    if not obj.hasTag("hot") and obj.hasTag("scar") then
+      selected = obj
+      break
+    end
+  end
+
+  if selected ~= nil then
+    randomNumber = math.random(index, index + 2)
+    if randomNumber > 5 then
+      randomNumber = randomNumber - 5
+    elseif randomNumber < 1 then
+      randomNumber = 5
+    end
+    selected.setLock(false)
+    selected.setPosition(spawnPoints[randomNumber])
+    selected.setRotation({0,0,0})
+    selected.addForce({vectorForce[randomNumber][1]+math.random(-1,1),0,vectorForce[randomNumber][2]+math.random(-1,1)},4)
+    selected.addTag("hot")
+  end
+end
