@@ -1,0 +1,2 @@
+<button text="Move to scar" onClick="MScar" height="50" width="50" rotation="0 0 180" position="0 -50 -50"/>
+<button text="Move from scar" onClick="TScar" height="50" width="50" rotation="0 0 180" position="0 0 -50"/>
