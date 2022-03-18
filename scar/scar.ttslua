@@ -1,0 +1,7 @@
+function MScar()
+  Global.call("moveToScar")
+end
+
+function TScar()
+  Global.call("takeFromScar")
+end
